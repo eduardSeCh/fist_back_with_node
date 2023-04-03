@@ -3,10 +3,10 @@ POST http://localhost:3001/api/notes
 Content-Type: application/json
 
 {
-    "content": "Nueva nota v2 with false"
+    "content": "Nueva nota v2 with true",
+    "important": true
 }
 
 ### without correct body
-
 POST http://localhost:3001/api/notes 
 Content-Type: application/json
