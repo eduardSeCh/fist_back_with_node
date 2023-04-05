@@ -11,13 +11,12 @@ const app = express()
 const logger = require('./loggerMiddleware')
 const notFound = require('./middleware/notFound')
 const handleErrors = require('./middleware/handleErrors')
+const userRouter = require('./controllers/users')
 
 app.use(cors())
 app.use(express.json()) // Habilitar request.boy
 
 app.use(logger)
-
-// let notes = []
 
 Sentry.init({
   dsn: 'https://7d440f3a60424ec7b0e1ae062f6b0962@o4504950975627264.ingest.sentry.io/4504950977789952',
@@ -46,12 +45,14 @@ app.get('/', (request, response) => {
   response.send('<h1>hello word in home</h1>')
 })
 
-app.get('/api/notes', (request, response) => {
-  Note.find({}).then(notes => {
-    response.json(notes)
-  }).catch((err) => {
-    console.error(err)
-  })
+app.get('/api/notes', async (request, response) => {
+  // Note.find({}).then(notes => {
+  //   response.json(notes)
+  // }).catch((err) => {
+  //   console.error(err)
+  // })
+  const notes = await Note.find({})
+  response.json(notes)
 })
 
 app.get('/api/notes/:id', (request, response, next) => {
@@ -71,15 +72,18 @@ app.get('/api/notes/:id', (request, response, next) => {
   })
 })
 
-app.delete('/api/notes/:id', (request, response, next) => {
+app.delete('/api/notes/:id', async (request, response, next) => {
   const { id } = request.params
   // notes = notes.filter(note => note.i !== id)
-  Note.findByIdAndRemove(id).then(result => {
-    response.status(204).end()
-  }).catch(err => next(err))
+  // Note.findByIdAndRemove(id).then(result => {
+  //   response.status(204).end()
+  // }).catch(err => next(err))
+
+  await Note.findByIdAndDelete(id)
+  response.status(204).end()
 })
 
-app.post('/api/notes', (request, response) => {
+app.post('/api/notes', async (request, response, next) => {
   const note = request.body
   console.log(note)
 
@@ -102,9 +106,15 @@ app.post('/api/notes', (request, response) => {
   // Añadir nueva nota a notas
   /* notes = [...notes, newNote] */
 
-  newNote.save().then(saveNote => {
+  // newNote.save().then(saveNote => {
+  //   response.json(saveNote)
+  // })
+  try {
+    const saveNote = await newNote.save()
     response.json(saveNote)
-  })
+  } catch (error) {
+    next(error)
+  }
 
   // Response 201 & new note
   /* response.status(201).json(newNote) */
@@ -125,12 +135,16 @@ app.put('/api/notes/:id', (request, response, next) => {
     })
 })
 
+app.use('/api/users', userRouter)
+
 app.use(Sentry.Handlers.errorHandler())
 
 app.use(notFound)
 app.use(handleErrors)
 
 const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
+
+module.exports = { app, server }

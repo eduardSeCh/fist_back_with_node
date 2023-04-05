@@ -3,7 +3,11 @@ const { Schema, model } = require('mongoose')
 const noteSechema = new Schema({
   content: String,
   date: Date,
-  important: Boolean
+  important: Boolean,
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }
 })
 
 noteSechema.set('toJSON', { // Change json fomart response
