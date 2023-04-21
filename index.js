@@ -5,13 +5,14 @@ const cors = require('cors')
 const Sentry = require('@sentry/node')
 const Tracing = require('@sentry/tracing')
 
-const Note = require('./models/Note') // Model Note
 const app = express()
 
 const logger = require('./loggerMiddleware')
 const notFound = require('./middleware/notFound')
 const handleErrors = require('./middleware/handleErrors')
 const userRouter = require('./controllers/users')
+const notesRouter = require('./controllers/notes')
+const loginRouter = require('./controllers/login')
 
 app.use(cors())
 app.use(express.json()) // Habilitar request.boy
@@ -41,101 +42,14 @@ app.use(Sentry.Handlers.requestHandler())
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler())
 
-app.get('/', (request, response) => {
-  response.send('<h1>hello word in home</h1>')
-})
-
-app.get('/api/notes', async (request, response) => {
-  // Note.find({}).then(notes => {
-  //   response.json(notes)
-  // }).catch((err) => {
-  //   console.error(err)
-  // })
-  const notes = await Note.find({})
-  response.json(notes)
-})
-
-app.get('/api/notes/:id', (request, response, next) => {
-  const { id } = request.params
-  // const note = notes.find(note => note.i === id)
-
-  Note.findById(id).then(note => {
-    if (note) {
-      response.json(note)
-    } else {
-      response.status(404).end()
-    }
-  }).catch(err => {
-    next(err)
-    /* console.error(err.message)
-    response.status(400).end() */
-  })
-})
-
-app.delete('/api/notes/:id', async (request, response, next) => {
-  const { id } = request.params
-  // notes = notes.filter(note => note.i !== id)
-  // Note.findByIdAndRemove(id).then(result => {
-  //   response.status(204).end()
-  // }).catch(err => next(err))
-
-  await Note.findByIdAndDelete(id)
-  response.status(204).end()
-})
-
-app.post('/api/notes', async (request, response, next) => {
-  const note = request.body
-  console.log(note)
-
-  // envio obligatorio
-  if (!note || !note.content) {
-    return response.status(400).json({
-      error: 'note.content is missing'
-    })
-  }
-
-  /* const ids = notes.map(note => note.i)
-  const maxId = Math.max(...ids) */
-
-  const newNote = new Note({
-    content: note.content,
-    important: typeof note.important !== 'undefined' ? note.important : false,
-    date: new Date()
-  })
-
-  // Añadir nueva nota a notas
-  /* notes = [...notes, newNote] */
-
-  // newNote.save().then(saveNote => {
-  //   response.json(saveNote)
-  // })
-  try {
-    const saveNote = await newNote.save()
-    response.json(saveNote)
-  } catch (error) {
-    next(error)
-  }
-
-  // Response 201 & new note
-  /* response.status(201).json(newNote) */
-})
-
-app.put('/api/notes/:id', (request, response, next) => {
-  const { id } = request.params
-  const note = request.body
-
-  const newNoteInfo = {
-    content: note.content,
-    important: note.important
-  }
-
-  Note.findByIdAndUpdate(id, newNoteInfo, { new: true })
-    .then(result => {
-      response.json(result)
-    })
-})
-
+app.use('/api/notes', notesRouter)
 app.use('/api/users', userRouter)
+app.use('/api/login', loginRouter)
+
+if (process.env.NODE_ENV === 'test') {
+  const testingRouter = require('./controllers/testing')
+  app.use('/api/testing', testingRouter)
+}
 
 app.use(Sentry.Handlers.errorHandler())
 

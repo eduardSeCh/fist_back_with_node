@@ -1,9 +1,10 @@
 ### with correct body
 POST http://localhost:3001/api/notes 
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0MmYxMWE1YzVlY2IzMmRiMTFmZDk2MiIsInVzZXJuYW1lIjoiQG1pZHVkZXYiLCJpYXQiOjE2ODA4OTM5NTIsImV4cCI6MTY4MTQ5ODc1Mn0.ygXzEAW8Q9zBL532me5E2hOF385M1K3SDAab5fcD7q
 
 {
-    "content": "Nueva nota v2 with true",
+    "content": "Utilizando el middleware del user extractor para obtener userid",
     "important": true
 }
 
